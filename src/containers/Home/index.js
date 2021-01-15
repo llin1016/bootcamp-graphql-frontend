@@ -1,8 +1,10 @@
 import React from 'react'
 import { useQuery, useLazyQuery, useMutation } from '@apollo/react-hooks'
-import { ADD_ADDRESS, ALL_ADDRESSES, ALL_PUBLISHERS, ADD_PUBLISHER } from './graphql'
+import { ADD_ADDRESS, ALL_ADDRESSES, UPDATE_ADDRESS, ALL_PUBLISHERS, ADD_PUBLISHER } from './graphql'
 
 const Home = () => {
+
+    // Address Queries
     const {data:addressData, loading:addressLoading, error:addressError} = useQuery(ALL_ADDRESSES)
     if (addressError){
         throw new Error("AllAddresses failed")
@@ -33,6 +35,29 @@ const Home = () => {
     if (addAddressError){
         throw new Error("AddAddress failed")
     }
+
+    const [updateAddress, {error: updateAddressError, loading: updateAddressLoading}] = useMutation(UPDATE_ADDRESS, {
+        update: (client, { data }) => {
+            try {
+                const temp = client.readQuery({ query: ALL_ADDRESSES })
+                temp.allAddresses = [...temp.allAddresses, data.updateAddress]
+
+                client.writeQuery({ query: ALL_ADDRESSES, temp})
+            } catch(error){
+                throw new Error("update failed")
+            }
+        },
+        variables: {
+            id: "901700e9-9383-4e0f-a957-aa0b2e74114a",
+            input: {
+                "street": "merp",
+                "city": "merp",
+                "state": "merp",
+                "zip": "merp"
+            }
+        },
+        refetchQueries: () => [{query: ALL_ADDRESSES}]
+    })
 
     const {data:publisherData, loading:publisherLoading, error:publisherError} = useQuery(ALL_PUBLISHERS)
     if (publisherError){
@@ -82,6 +107,9 @@ const Home = () => {
 
             <h1>Add Address</h1>
             <button onClick={addAddress}>Add Address</button>
+
+            <h1>Update Address</h1>
+            <button onClick={updateAddress}>Update Address</button>
 
             <h1>useQuery Publisher List</h1>
             {publisherLoading ? "Loading" : publisherData.allPublishers.map(publisher => (

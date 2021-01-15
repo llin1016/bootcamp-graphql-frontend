@@ -153,3 +153,16 @@ export const ADD_PUBLISHER = gql`
     }
   }
 `
+
+// Update
+
+export const UPDATE_ADDRESS = gql`
+    mutation updateAddress($id:ID!,$input:AddressInput!){
+        updateAddress(id:$id,input:$input){
+            street
+            city
+            state
+            zip
+	}
+}
+`
