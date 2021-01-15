@@ -3,18 +3,29 @@ import { useQuery, useLazyQuery, useMutation } from '@apollo/react-hooks'
 import { ADD_ADDRESS, ALL_ADDRESSES, ALL_PUBLISHERS, ADD_PUBLISHER } from './graphql'
 
 const Home = () => {
-    const {data:adrData, loading:adrLoading, error:adrError} = useQuery(ALL_ADDRESSES)
-    if (error){
+    const {data:addressData, loading:addressLoading, error:addressError} = useQuery(ALL_ADDRESSES)
+    if (addressError){
         throw new Error("AllAddresses failed")
     }
 
     const [addAddress, {error: addAddressError, loading:addAddressLoading}] = useMutation(ADD_ADDRESS,{
+        update: (client, { data }) => {
+            try {
+                const temp = client.readQuery({ query: ALL_ADDRESSES })
+
+                temp.allAddresses = [...temp.allAddresses,data.addAddress]
+
+                client.writeQuery({ query: ALL_ADDRESSES, temp})
+            } catch(error){
+                throw new Error('update failed')
+            }
+        },
         variables: {
             "input":{
-                "street": "hello",
-                "city": "hello",
-                "state": "hello",
-                "zip": "hello"
+                "street": "merp",
+                "city": "merp",
+                "state": "merp",
+                "zip": "merp"
               }
         },
         refetchQueries: () => [{query: ALL_ADDRESSES}]
@@ -23,25 +34,35 @@ const Home = () => {
         throw new Error("AddAddress failed")
     }
 
-    const {data, loading, error} = useQuery(ALL_PUBLISHERS)
-    if (error){
+    const {data:publisherData, loading:publisherLoading, error:publisherError} = useQuery(ALL_PUBLISHERS)
+    if (publisherError){
         throw new Error("AllPublishers failed")
     }
 
     const [allPublishers, {data:lData, loading:lLoading, error:lError, called}] = useLazyQuery(ALL_PUBLISHERS)
 
     const [addPublisher, {error:addError, loading:addLoading}] = useMutation(ADD_PUBLISHER, {
+        update: (client,{ data }) => {
+            try {
+                const temp = client.readQuery({ query: ALL_PUBLISHERS })
+                temp.allPublishers = [...temp.allPublishers, data.addPublisher]
+
+                client.writeQuery({ query: ALL_PUBLISHERS, temp})
+            } catch(error) {
+                throw new Error('update failed')
+            }
+        },
         variables: {
             "input":
             {
-              "company":"byebyebyebye",
-              "phoneNumber":"byebyebyebye",
+              "company":"merp",
+              "phoneNumber":"merp",
               "numBooksPublished":30,
               "address":{
-                "street":"byebyebyebye",
-                "city":"byebyebyebye",
-                  "state":"byebyebyebye",
-                "zip":"byebyebyebye"
+                "street":"merp",
+                "city":"merp",
+                  "state":"merp",
+                "zip":"merp"
               }
             }
         },
@@ -54,7 +75,7 @@ const Home = () => {
     return (
         <>
             <h1>useQuery Addresses List</h1>
-            {loading ? "Loading" : adrData.allAddresses.map(address => (
+            {addressLoading ? "Loading" : addressData.allAddresses.map(address => (
                 <p>{address.street}, {address.city}</p>
             )
             )}
@@ -63,7 +84,7 @@ const Home = () => {
             <button onClick={addAddress}>Add Address</button>
 
             <h1>useQuery Publisher List</h1>
-            {loading ? "Loading" : data.allPublishers.map(publisher => (
+            {publisherLoading ? "Loading" : publisherData.allPublishers.map(publisher => (
                 <p>{publisher.company}, {publisher.phoneNumber}</p>
             )
             )}
